@@ -66,25 +66,20 @@ if camera_image is not None:
         st.success(f"Kết quả: {disease_name}") 
         st.info(f"Độ tin cậy: {confidence_score * 100:.2f}%")
         
-        # 7. Xử lý logic bệnh (đảm bảo phần này thụt vào trong if)
-        if disease_name.lower() == "rust":
-            st.warning("Cây có dấu hiệu bệnh gỉ sắt. Cần kiểm tra ngay!")
+        # 7. Xử lý logic bệnh (Dùng if/elif để không bị trùng lặp)
+        if "rust" in disease_name.lower():
+            st.error("⚠️ Phát hiện: Bệnh Gỉ Sắt (Coffee Leaf Rust)")
+            st.markdown("— **Triệu chứng:** Mặt dưới lá xuất hiện các đốm bột màu vàng cam. Lá bệnh sẽ rụng sớm.")
+            st.markdown("— **Cách xử lý:** Cắt tỉa cành sâu bệnh. Phun các loại thuốc gốc Đồng (Copper Hydroxide) để phòng trị.")
+
+        elif "red spider mite" in disease_name.lower():
+            st.warning("⚠️ Phát hiện: Nhện Đỏ gây hại (Red Spider Mite)")
+            st.markdown("— **Triệu chứng:** Lá mất màu xanh bóng, chuyển sang màu rám bạc hoặc lốm đốm vàng.")
+            st.markdown("— **Cách xử lý:** Tưới nước phun áp lực nhẹ để rửa trôi. Sử dụng tinh dầu Neem sinh học.")
+
+        elif "healthy" in disease_name.lower():
+            st.success("✅ Không phát hiện bệnh! Lá cà phê khỏe mạnh.")
+            st.markdown("— **Lời khuyên:** Cây đang phát triển tốt. Tiếp tục duy trì chế độ chăm sóc hiện tại.")
+
         else:
-            st.success("Cây trông có vẻ bình thường.")
-    # 5. Đưa ra giải pháp
-    if disease_name.lower() == "rust":
-        st.error("**Phát hiện: Bệnh Gỉ sắt (Coffee Leaf Rust)**")
-        st.markdown("- **Triệu chứng:** Mặt dưới lá xuất hiện các đốm bột màu vàng cam. Lá bệnh sẽ rụng sớm.")
-        st.markdown("- **Xử lý:** Cắt tỉa cành vô hiệu. Phun các loại thuốc gốc Đồng (Copper Hydroxide) để phòng trị.")
-        
-    elif disease_name.lower() == "red_spider_mite" or disease_name.lower() == "red spider mite":
-        st.warning("**Phát hiện: Nhện đỏ gây hại (Red Spider Mite)**")
-        st.markdown("- **Triệu chứng:** Lá mất màu xanh bóng, chuyển sang màu xám bạc hoặc lấm tấm vàng.")
-        st.markdown("- **Xử lý:** Tưới nước phun mưa áp lực mạnh để rửa trôi. Sử dụng tinh dầu Neem sinh học.")
-        
-    elif disease_name.lower() == "healthy":
-        st.success("**🎉 Không phát hiện mầm bệnh! Lá cà phê khỏe mạnh.**")
-        st.markdown("- **Khuyến nghị:** Cây đang phát triển tốt. Tiếp tục duy trì chế độ chăm sóc hiện tại.")
-        
-    else:
-        st.info("Hệ thống chưa nhận diện rõ. Vui lòng thử chụp lại gần và rõ nét hơn.")
+            st.info("⚠️ Hệ thống chưa nhận diện rõ. Vui lòng thử chụp lại gần và rõ nét hơn.")
