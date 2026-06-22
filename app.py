@@ -9,7 +9,7 @@ st.write("Bật camera chụp trực tiếp lá cà phê để quét và nhận 
 
 @st.cache_resource
 def load_ai_model():
-    model = tf.keras.models.load_model("keras_model.h5")
+    model = tf.keras.models.load_model("keras_model.h5", compile=False)
     with open("labels.txt", "r", encoding="utf-8") as f:
         class_names = [line.strip() for line in f.readlines()]
     return model, class_names
@@ -22,7 +22,7 @@ if camera_image is not None:
     
     image = Image.open(camera_image).convert("RGB")
     size = (224, 224)
-    image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
+    image = ImageOps.fit(image, size, Image.Resampling.BILINEAR)
 
     image_array = np.asarray(image)
     normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
@@ -30,7 +30,7 @@ if camera_image is not None:
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
     data[0] = normalized_image_array
 
-    with st.spinner("AI đang phân tích bức ảnh ní vừa chụp..."):
+    with st.spinner("AI đang phân tích bức ảnh bạn vừa chụp..."):
         prediction = model.predict(data)
         index = np.argmax(prediction)
         
@@ -64,4 +64,4 @@ if camera_image is not None:
         st.write(f"Kết quả phân tích: **{raw_class_name}**")
 
 else:
-    st.write("👋 Đang đợi ní bấm nút chụp ảnh trên màn hình để bắt đầu phân tích đó!")
+    st.write("👋 Đang đợi bạn bấm nút chụp ảnh trên màn hình để bắt đầu phân tích đó!")
