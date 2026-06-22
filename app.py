@@ -48,7 +48,7 @@ if camera_image is not None:
         # 2. Chuyển sang mảng
         image_array = np.asarray(image)
         
-        # 3. CHỖ NÀY LÀ QUAN TRỌNG: Phải tạo ra biến này trước khi dùng nó
+        # 3. Định nghĩa biến (phải làm dòng này trước)
         normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
         
         # 4. Tạo thùng chứa và đổ dữ liệu vào
