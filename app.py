@@ -37,7 +37,7 @@ treatment_data = {
 }
 
 # CHỨC NĂNG CHỤP ẢNH TRỰC TIẾP
-camera_image = st.camera_input("Chụp ảnh lá cà phê của ní tại đây")
+camera_image = st.camera_input("Chụp ảnh lá cà phê của bạn tại đây")
 
 if camera_image is not None:
     # Xử lý ảnh
