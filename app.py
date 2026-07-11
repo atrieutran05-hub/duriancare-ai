@@ -19,7 +19,7 @@ class_names = [
 @st.cache_resource
 def load_my_model():
     try:
-        model = tf.keras.models.load_model('durian_care_model.keras', compile=False)
+        model = tf.keras.models.load_model('durian_care_model.h5', compile=False)
         return model
     except Exception as e:
         st.error(f"Lỗi nạp model: {e}")
