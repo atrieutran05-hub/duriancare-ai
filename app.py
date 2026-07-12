@@ -4,98 +4,121 @@ from PIL import Image
 import numpy as np
 import json
 
-# ==========================================
-# 1. CẤU HÌNH GIAO DIỆN TRANG WEB
-# ==========================================
 st.set_page_config(
     page_title="Bác Sĩ Sầu Riêng AI", 
     page_icon="🌳", 
     layout="centered"
 )
 
-# Danh sách các loại bệnh (Theo đúng thứ tự Alphabet lúc máy học trong Colab)
+st.markdown("""
+    <style>
+    .main-title {
+        font-size: 42px;
+        color: #2e7d32;
+        text-align: center;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+    .sub-title {
+        text-align: center;
+        color: #888888;
+        font-size: 16px;
+        margin-bottom: 30px;
+    }
+    /* Chỉnh nút bấm to và bo góc đẹp hơn */
+    .stButton>button {
+        background-color: #2e7d32;
+        color: white;
+        border-radius: 8px;
+        height: 50px;
+        font-size: 18px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: #1b5e20;
+        color: white;
+        border-color: #1b5e20;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 CLASS_NAMES = [
-    "ALGAL_LEAF_SPOT", 
-    "ALLOCARIDARA_ATTACK", 
-    "HEALTHY_LEAF", 
-    "LEAF_BLIGHT", 
-    "PHOMOPSIS_LEAF_SPOT"
+    "ALGAL_LEAF_SPOT", "ALLOCARIDARA_ATTACK", 
+    "HEALTHY_LEAF", "LEAF_BLIGHT", "PHOMOPSIS_LEAF_SPOT"
 ]
 
-# ==========================================
-# 2. HÀM NẠP DỮ LIỆU (Có dùng Cache để web chạy mượt)
-# ==========================================
 @st.cache_resource
 def load_model():
-    """Tải mô hình AI đã huấn luyện (.keras)"""
     return tf.keras.models.load_model('durian_care_model.keras')
 
 @st.cache_data
 def load_database():
-    """Tải từ điển bệnh (.json)"""
     with open('database.json', 'r', encoding='utf-8') as f:
         return json.load(f)
 
-# Bắt đầu nạp model và database ẩn dưới nền
 try:
     model = load_model()
     database = load_database()
 except Exception as e:
-    st.error(f"❌ Lỗi khởi tạo hệ thống! Ní kiểm tra lại xem đã up đủ file model và json lên GitHub chưa nha.\nLỗi chi tiết: {e}")
-    st.stop() # Dừng app nếu không có file
+    st.error(f"❌ Lỗi khởi tạo hệ thống! Vui lòng kiểm tra file model và json. Lỗi: {e}")
+    st.stop()
 
-# ==========================================
-# 3. XÂY DỰNG GIAO DIỆN CHÍNH
-# ==========================================
-st.title("🌳 Trợ lý AI: Bác Sĩ Sầu Riêng")
-st.markdown("""
-Chào mừng đến với hệ thống nhận diện bệnh trên lá sầu riêng! 
-Chỉ cần tải lên một bức ảnh chụp lá sầu riêng, AI sẽ tự động "bắt mạch" và đưa ra cách trị bệnh chuẩn xác.
-""")
+st.markdown('<div class="main-title">🌳 Bác Sĩ Sầu Riêng</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Chuyên gia AI chẩn đoán bệnh qua hình ảnh, nhanh chóng & chính xác.</div>', unsafe_allow_html=True)
 
-# Khu vực upload ảnh
-uploaded_file = st.file_uploader("Tải ảnh lá sầu riêng lên đây (JPG, PNG)", type=["jpg", "jpeg", "png"])
+tab1, tab2 = st.tabs(["📸 Chụp ảnh trực tiếp", "📂 Tải ảnh từ thư viện"])
 
-if uploaded_file is not None:
-    # 3.1 Hiển thị ảnh người dùng tải lên
-    image = Image.open(uploaded_file).convert('RGB')
-    st.image(image, caption="Ảnh lá sầu riêng đang phân tích...", use_container_width=True)
+image_to_process = None
 
-    # Nút bấm kích hoạt AI
-    if st.button("🔍 Chuẩn đoán ngay", use_container_width=True):
-        with st.spinner('Bác sĩ đang "khám" lá... Chờ một xíu nha!'):
+with tab1:
+    st.info("💡 Mẹo: Hãy đưa điện thoại lại gần lá sầu riêng, lấy nét rõ để AI nhìn chuẩn nhất nhé!")
+    camera_image = st.camera_input("Nhấn vào đây để mở Camera")
+    if camera_image:
+        image_to_process = camera_image
+
+with tab2:
+    uploaded_file = st.file_uploader("Chọn ảnh lá sầu riêng (JPG, PNG)", type=["jpg", "jpeg", "png"])
+    if uploaded_file:
+        image_to_process = uploaded_file
+
+if image_to_process is not None:
+    image = Image.open(image_to_process).convert('RGB')
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.image(image, caption="📸 Ảnh cần phân tích", use_container_width=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if st.button("🔍 Tiến Hành Chuẩn Đoán", use_container_width=True):
+        with st.spinner('AI đang quét tế bào lá... Chờ một xíu nha!'):
             try:
-                # 3.2 Tiền xử lý ảnh (Đưa về kích thước 224x224 chuẩn của model)
                 img_resized = image.resize((224, 224))
                 img_array = tf.keras.utils.img_to_array(img_resized)
-                img_array = np.expand_dims(img_array, axis=0) # Thêm chiều batch (1, 224, 224, 3)
+                img_array = np.expand_dims(img_array, axis=0)
 
-                # 3.3 AI bắt đầu phán đoán
                 predictions = model.predict(img_array)
-                confidence_scores = predictions[0] # Tỉ lệ % của từng bệnh
+                confidence_scores = predictions[0]
                 
-                # Tìm ra bệnh có % cao nhất
                 predicted_class_index = np.argmax(confidence_scores)
                 predicted_class_name = CLASS_NAMES[predicted_class_index]
-                confidence = int(confidence_scores[predicted_class_index] * 100) # Đổi ra số tròn 100%
+                confidence = int(confidence_scores[predicted_class_index] * 100)
 
-                # 3.4 Lấy thông tin tiếng Việt từ file json
                 disease_info = database.get(predicted_class_name, {})
                 ten_benh_vi = disease_info.get("name_vi", "Không xác định")
                 cach_tri = disease_info.get("treatment", "Chưa có thông tin cách trị.")
 
-                # 3.5 Hiển thị kết quả ra màn hình
                 st.divider()
-                st.subheader("📋 Kết quả chuẩn đoán:")
+                st.markdown("<h3 style='text-align: center; color: #ff9800;'>📋 KẾT QUẢ CHUẨN ĐOÁN</h3>", unsafe_allow_html=True)
                 
                 if predicted_class_name == "HEALTHY_LEAF":
-                    # Nếu lá khỏe mạnh -> Báo màu xanh
-                    st.success(f"🎉 **Tình trạng:** {ten_benh_vi} (Độ tự tin: {confidence}%)")
+                    st.success(f"🎉 **Tình trạng:** {ten_benh_vi} (Khả năng: {confidence}%)")
                     st.info(f"💡 **Lời khuyên:** {cach_tri}")
+                    st.balloons() 
                 else:
-                    # Nếu có bệnh -> Báo màu đỏ cảnh báo
-                    st.error(f"⚠️ **Tình trạng:** {ten_benh_vi} (Độ tự tin: {confidence}%)")
-                    st.warning(f"💊 **Cách xử lý:** {cach_tri}")
+                    st.error(f"⚠️ **Phát hiện bệnh:** {ten_benh_vi} (Khả năng: {confidence}%)")
+                    st.warning(f"💊 **Phác đồ điều trị:** {cach_tri}")
 
             except Exception as e:
-                st.error(f"Đã có lỗi xảy ra trong lúc tính toán: {e}")
+                st.error(f"Lỗi tính toán: {e}")
