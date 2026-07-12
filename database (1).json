@@ -1,0 +1,22 @@
+{
+    "ALGAL_LEAF_SPOT": {
+        "name_vi": "Bệnh đốm tảo",
+        "treatment": "Cắt tỉa cành bị bệnh, đảm bảo vườn thông thoáng, dùng thuốc gốc đồng."
+    },
+    "ALLOCARIDARA_ATTACK": {
+        "name_vi": "Rầy nhảy tấn công",
+        "treatment": "Phun thuốc đặc trị rầy nhảy vào giai đoạn cây ra đọt non."
+    },
+    "HEALTHY_LEAF": {
+        "name_vi": "Lá khỏe mạnh",
+        "treatment": "Cây đang phát triển bình thường, tiếp tục chăm sóc tốt."
+    },
+    "LEAF_BLIGHT": {
+        "name_vi": "Bệnh cháy lá",
+        "treatment": "Cắt bỏ lá bệnh, phun thuốc diệt nấm (như Ridomil Gold) định kỳ."
+    },
+    "PHOMOPSIS_LEAF_SPOT": {
+        "name_vi": "Bệnh đốm lá Phomopsis",
+        "treatment": "Tỉa cành bệnh, phun thuốc phòng nấm, tránh để vườn quá ẩm."
+    }
+}
