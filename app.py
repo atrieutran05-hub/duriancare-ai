@@ -3,69 +3,79 @@ import tensorflow as tf
 from PIL import Image
 import numpy as np
 import json
-import os
 
-# Cấu hình trang
-st.set_page_config(page_title="DurianCare AI", page_icon="🌳")
-st.title("🌳 DurianCare AI - Bác Sĩ Sầu Riêng")
+st.set_page_config(
+    page_title="Bác Sĩ Sầu Riêng AI", 
+    page_icon="🌳", 
+    layout="centered"
+)
 
-# Danh sách nhãn bệnh
-class_names = [
-    "Algal leaf spot",
-    "Allocariadara attack",
-    "Healthy leaf",
-    "Leaf blight",
-    "Phomopsis leaf spot"
+CLASS_NAMES = [
+    "ALGAL_LEAF_SPOT", 
+    "ALLOCARIDARA_ATTACK", 
+    "HEALTHY_LEAF", 
+    "LEAF_BLIGHT", 
+    "PHOMOPSIS_LEAF_SPOT"
 ]
 
-# Nạp model (sử dụng cache để không nạp lại mỗi lần reload trang)
 @st.cache_resource
-def load_my_model():
-    try:
-        # Thêm compile=False để bỏ qua cấu hình training, giúp tránh lỗi khi đọc file
-        model = tf.keras.models.load_model('durian_care_model.kerras', compile=False)
-        return model
-    except Exception as e:
-        st.error(f"Lỗi nạp model: {e}")
-        return None
+def load_model():
+    """Tải mô hình AI đã huấn luyện (.keras)"""
+    return tf.keras.models.load_model('durian_care_model.keras')
 
-# Nạp database hướng dẫn
 @st.cache_data
-def load_db():
-    if os.path.exists('database.json'):
-        with open('database.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return {}
+def load_database():
+    """Tải từ điển bệnh (.json)"""
+    with open('database.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
 
-model = load_my_model()
-db = load_db()
+try:
+    model = load_model()
+    database = load_database()
+except Exception as e:
+    st.error(f"❌ Lỗi khởi tạo hệ thống! Ní kiểm tra lại xem đã up đủ file model và json lên GitHub chưa nha.\nLỗi chi tiết: {e}")
+    st.stop() 
+    
+st.title("🌳 Trợ lý AI: Bác Sĩ Sầu Riêng")
+st.markdown("""
+Chào mừng đến với hệ thống nhận diện bệnh trên lá sầu riêng! 
+Chỉ cần tải lên một bức ảnh chụp lá sầu riêng, AI sẽ tự động "bắt mạch" và đưa ra cách trị bệnh chuẩn xác.
+""")
 
-# Giao diện tải ảnh
-uploaded_file = st.file_uploader("Tải lên ảnh lá sầu riêng:", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Tải ảnh lá sầu riêng lên đây (JPG, PNG)", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption='Ảnh kiểm tra', use_container_width=True)
+    
+    image = Image.open(uploaded_file).convert('RGB')
+    st.image(image, caption="Ảnh lá sầu riêng đang phân tích...", use_container_width=True)
 
-    if st.button("Phân tích"):
-        if model is None:
-            st.error("Model chưa sẵn sàng! Vui lòng kiểm tra lại file model.")
-        else:
-            # Tiền xử lý ảnh (chuyển về 224x224 và chuẩn hóa)
-            img = image.resize((224, 224))
-            img_array = tf.keras.utils.img_to_array(img)
-            img_array = np.expand_dims(img_array, 0) / 255.0
+    if st.button("🔍 Chuẩn đoán ngay", use_container_width=True):
+        with st.spinner('Bác sĩ đang "khám" lá... Chờ một xíu nha!'):
+            try:
+                img_resized = image.resize((224, 224))
+                img_array = tf.keras.utils.img_to_array(img_resized)
+                img_array = np.expand_dims(img_array, axis=0)
+                
+                predictions = model.predict(img_array)
+                confidence_scores = predictions[0]
+                
+                predicted_class_index = np.argmax(confidence_scores)
+                predicted_class_name = CLASS_NAMES[predicted_class_index]
+                confidence = int(confidence_scores[predicted_class_index] * 100)
 
-            # Dự đoán
-            predictions = model.predict(img_array)
-            idx = np.argmax(predictions)
-            label = class_names[idx]
-            conf = np.max(predictions) * 100
+                disease_info = database.get(predicted_class_name, {})
+                ten_benh_vi = disease_info.get("name_vi", "Không xác định")
+                cach_tri = disease_info.get("treatment", "Chưa có thông tin cách trị.")
 
-            # Hiển thị kết quả
-            st.write(f"### Kết quả: **{label}** ({conf:.2f}%)")
+                st.divider()
+                st.subheader("📋 Kết quả chuẩn đoán:")
+                
+                if predicted_class_name == "HEALTHY_LEAF":
+                    st.success(f"🎉 **Tình trạng:** {ten_benh_vi} (Độ tự tin: {confidence}%)")
+                    st.info(f"💡 **Lời khuyên:** {cach_tri}")
+                else:
+                    st.error(f"⚠️ **Tình trạng:** {ten_benh_vi} (Độ tự tin: {confidence}%)")
+                    st.warning(f"💊 **Cách xử lý:** {cach_tri}")
 
-            # Hiển thị thông tin từ database
-            info = db.get(label, {"name_vi": "Chưa có thông tin", "treatment": "Đang cập nhật"})
-            st.write(f"**Tên tiếng Việt:** {info['name_vi']}")
-            st.info(f"**Hướng dẫn:** {info['treatment']}")
+            except Exception as e:
+                st.error(f"Đã có lỗi xảy ra trong lúc tính toán: {e}")
