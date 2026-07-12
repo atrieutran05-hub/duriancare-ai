@@ -25,21 +25,6 @@ st.markdown("""
         font-size: 16px;
         margin-bottom: 30px;
     }
-    /* Chỉnh nút bấm to và bo góc đẹp hơn */
-    .stButton>button {
-        background-color: #2e7d32;
-        color: white;
-        border-radius: 8px;
-        height: 50px;
-        font-size: 18px;
-        font-weight: bold;
-        transition: 0.3s;
-    }
-    .stButton>button:hover {
-        background-color: #1b5e20;
-        color: white;
-        border-color: #1b5e20;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -72,7 +57,7 @@ tab1, tab2 = st.tabs(["📸 Chụp ảnh trực tiếp", "📂 Tải ảnh từ 
 image_to_process = None
 
 with tab1:
-    st.info("💡 Mẹo: Hãy đưa điện thoại lại gần lá sầu riêng, lấy nét rõ để AI nhìn chuẩn nhất nhé!")
+    st.info("💡 Mẹo: Đưa điện thoại lại gần lá sầu riêng, lấy nét rõ để AI nhìn chuẩn nhất!")
     camera_image = st.camera_input("Nhấn vào đây để mở Camera")
     if camera_image:
         image_to_process = camera_image
@@ -87,38 +72,37 @@ if image_to_process is not None:
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.image(image, caption="📸 Ảnh cần phân tích", use_container_width=True)
+        st.image(image, caption="📸 Ảnh đang được phân tích...", use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
 
-    if st.button("🔍 Tiến Hành Chuẩn Đoán", use_container_width=True):
-        with st.spinner('AI đang quét tế bào lá... Chờ một xíu nha!'):
-            try:
-                img_resized = image.resize((224, 224))
-                img_array = tf.keras.utils.img_to_array(img_resized)
-                img_array = np.expand_dims(img_array, axis=0)
+    with st.spinner('AI đang quét tế bào lá... Chờ một xíu nha!'):
+        try:
+            img_resized = image.resize((224, 224))
+            img_array = tf.keras.utils.img_to_array(img_resized)
+            img_array = np.expand_dims(img_array, axis=0)
 
-                predictions = model.predict(img_array)
-                confidence_scores = predictions[0]
-                
-                predicted_class_index = np.argmax(confidence_scores)
-                predicted_class_name = CLASS_NAMES[predicted_class_index]
-                confidence = int(confidence_scores[predicted_class_index] * 100)
+            predictions = model.predict(img_array)
+            confidence_scores = predictions[0]
+            
+            predicted_class_index = np.argmax(confidence_scores)
+            predicted_class_name = CLASS_NAMES[predicted_class_index]
+            confidence = int(confidence_scores[predicted_class_index] * 100)
 
-                disease_info = database.get(predicted_class_name, {})
-                ten_benh_vi = disease_info.get("name_vi", "Không xác định")
-                cach_tri = disease_info.get("treatment", "Chưa có thông tin cách trị.")
+            disease_info = database.get(predicted_class_name, {})
+            ten_benh_vi = disease_info.get("name_vi", "Không xác định")
+            cach_tri = disease_info.get("treatment", "Chưa có thông tin cách trị.")
 
-                st.divider()
-                st.markdown("<h3 style='text-align: center; color: #ff9800;'>📋 KẾT QUẢ CHUẨN ĐOÁN</h3>", unsafe_allow_html=True)
-                
-                if predicted_class_name == "HEALTHY_LEAF":
-                    st.success(f"🎉 **Tình trạng:** {ten_benh_vi} (Khả năng: {confidence}%)")
-                    st.info(f"💡 **Lời khuyên:** {cach_tri}")
-                    st.balloons() 
-                else:
-                    st.error(f"⚠️ **Phát hiện bệnh:** {ten_benh_vi} (Khả năng: {confidence}%)")
-                    st.warning(f"💊 **Phác đồ điều trị:** {cach_tri}")
+            st.divider()
+            st.markdown("<h3 style='text-align: center; color: #ff9800;'>📋 KẾT QUẢ CHUẨN ĐOÁN</h3>", unsafe_allow_html=True)
+            
+            if predicted_class_name == "HEALTHY_LEAF":
+                st.success(f"🎉 **Tình trạng:** {ten_benh_vi} (Khả năng: {confidence}%)")
+                st.info(f"💡 **Lời khuyên:** {cach_tri}")
+                st.balloons()
+            else:
+                st.error(f"⚠️ **Phát hiện bệnh:** {ten_benh_vi} (Khả năng: {confidence}%)")
+                st.warning(f"💊 **Phác đồ điều trị:** {cach_tri}")
 
-            except Exception as e:
-                st.error(f"Lỗi tính toán: {e}")
+        except Exception as e:
+            st.error(f"Lỗi tính toán: {e}")
