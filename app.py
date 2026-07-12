@@ -23,7 +23,7 @@ class_names = [
 def load_my_model():
     try:
         # Thêm compile=False để bỏ qua cấu hình training, giúp tránh lỗi khi đọc file
-        model = tf.keras.models.load_model('durian_care_model.h5', compile=False)
+        model = tf.keras.models.load_model('durian_care_model.kerras', compile=False)
         return model
     except Exception as e:
         st.error(f"Lỗi nạp model: {e}")
